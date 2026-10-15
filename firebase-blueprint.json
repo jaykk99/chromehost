@@ -1,0 +1,45 @@
+{
+  "collections": [
+    {
+      "name": "projects",
+      "description": "Core project data including names, status, and metadata.",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "name", "type": "string" },
+        { "name": "status", "type": "string" },
+        { "name": "owner", "type": "string" },
+        { "name": "workspaceId", "type": "string" },
+        { "name": "createdAt", "type": "timestamp" }
+      ]
+    },
+    {
+      "name": "workspaces",
+      "description": "Collaborative workspaces grouping projects and members.",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "name", "type": "string" },
+        { "name": "owner", "type": "string" }
+      ]
+    },
+    {
+      "name": "project_data",
+      "description": "Polymorphic collection for project-specific configurations (deployments, env, tables, etc).",
+      "fields": [
+        { "name": "projectId", "type": "string" },
+        { "name": "type", "type": "string" },
+        { "name": "data", "type": "map" }
+      ]
+    },
+    {
+      "name": "deployments",
+      "description": "History of project deployments.",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "projectId", "type": "string" },
+        { "name": "timestamp", "type": "timestamp" },
+        { "name": "status", "type": "string", "description": "BUILDING, SUCCESS, or FAILED" },
+        { "name": "logs", "type": "array", "items": { "type": "string" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Self-contained runtime data (never commit)
+/data/
+data/
+/sites/
+dist-electron/
+*.db
+*.db-wal
+*.db-shm

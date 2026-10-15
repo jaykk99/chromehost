@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --animate-shimmer: shimmer 2s infinite linear;
+  --animate-pulse-slow: pulseSlow 3.5s infinite ease-in-out;
+
+  @keyframes shimmer {
+    0% { transform: translateX(-150%); }
+    100% { transform: translateX(250%); }
+  }
+  @keyframes pulseSlow {
+    0%, 100% { opacity: 0.25; transform: scale(0.98); }
+    50% { opacity: 0.55; transform: scale(1.05); }
+  }
+}

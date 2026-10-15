@@ -1,0 +1,30 @@
+# This workflow integrates CodeRabbit into your GitHub repository.
+# For more information, visit: https://www.coderabbit.ai
+name: CodeRabbit
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  coderabbit:
+    runs-on: ubuntu-latest
+    name: Ask CodeRabbit for a review
+    steps:
+      - uses: actions/checkout@v4
+      - uses: coderabbitai/actions/python@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The following will enable a full review for every push.
+          # To conserve CodeRabbit review limits, consider setting `auto_review` to `false`
+          # and using the `/review` command to trigger reviews manually.
+          # For more options, see: https://docs.coderabbit.ai/getting-started/configuration
+          auto_review: true
+          auto_pause_after_reviewed_commits: 1 # Pause automatic incremental reviews after 1 reviewed commit.
+          # This will ensure that active branches with frequent pushes don't consume review allowance quickly.
+          # Use `@coderabbitai review` when the PR is ready for another pass.
+          # To disable this feature, set to 0.

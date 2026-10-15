@@ -1,0 +1,124 @@
+125:      const res = await fetch(`/api/projects/${currentProject.id}`, {
+143:      const res = await fetch(`/api/projects/${currentProject.id}`, { method: "DELETE" });
+191:    const fetchPublicUrl = () => {
+192:      fetch("/api/mcp/public-url")
+202:          console.error("Error fetching public MCP url:", err);
+206:    fetchPublicUrl();
+207:    const interval = setInterval(fetchPublicUrl, 4000);
+475:  const fetchDbTables = (projectId: string) => {
+476:    fetch(`/api/projects/${projectId}/database/tables`)
+489:  const fetchAuthConfig = (projectId: string) => {
+490:    fetch(`/api/projects/${projectId}/auth/config`)
+495:    fetch(`/api/projects/${projectId}/auth/users`)
+501:  const fetchApiKeys = (projectId: string) => {
+502:    fetch(`/api/projects/${projectId}/api-keys`)
+508:  const fetchComposioConnectors = (projectId: string) => {
+509:    fetch(`/api/projects/${projectId}/composio/connectors`)
+515:  const fetchDatabaseServices = (projectId: string) => {
+516:    fetch(`/api/projects/${projectId}/database/services`)
+522:  const fetchScalingConfig = (projectId: string) => {
+523:    fetch(`/api/projects/${projectId}/scaling`)
+529:  const fetchEnvironments = (projectId: string) => {
+530:    fetch(`/api/projects/${projectId}/environments`)
+537:  const fetchWorkspaces = (activeWorkspaceId?: string) => {
+538:    fetch("/api/workspaces")
+562:    const fetchProjects = () => {
+563:      fetch("/api/projects")
+593:    fetchProjects();
+594:    fetchWorkspaces();
+596:    const interval = setInterval(fetchProjects, 3000);
+609:      fetch(`/api/projects/${projId}/env`).then((res) => res.json()),
+610:      fetch(`/api/projects/${projId}/domains`).then((res) => res.json()),
+611:      fetch(`/api/projects/${projId}/deployments`).then((res) => res.json()),
+612:      fetch(`/api/projects/${projId}/shield`).then((res) => res.json()),
+613:      fetch(`/api/projects/${projId}/shield/threats`).then((res) => res.json()),
+623:        fetchDbTables(projId);
+624:        fetchAuthConfig(projId);
+625:        fetchApiKeys(projId);
+626:        fetchComposioConnectors(projId);
+627:        fetchDatabaseServices(projId);
+628:        fetchScalingConfig(projId);
+629:        fetchEnvironments(projId);
+653:    const fetchActiveProjectUpdates = () => {
+655:      fetch(`/api/projects/${projId}/deployments`)
+680:      fetch(`/api/projects/${projId}/domains`)
+691:      fetch(`/api/projects/${projId}/database/tables`)
+702:      fetch(`/api/projects/${projId}/audit-logs`)
+710:      fetch(`/api/projects/${projId}/env`)
+718:      fetch(`/api/projects/${projId}/database/services`)
+726:    const interval = setInterval(fetchActiveProjectUpdates, 3000);
+734:    const fetchShieldUpdates = () => {
+735:      fetch(`/api/projects/${currentProject.id}/shield/threats`)
+747:    fetchShieldUpdates();
+748:    const interval = setInterval(fetchShieldUpdates, 4000);
+756:    const fetchMetrics = () => {
+757:      fetch("/api/metrics")
+764:        .catch(err => console.error("Metrics failed to fetch", err));
+767:    fetchMetrics();
+768:    const intervalId = setInterval(fetchMetrics, 5000);
+774:    const fetchAnalytics = () => {
+775:      fetch(`/api/analytics?spike=${isTrafficSpikeActive}`)
+784:    fetchAnalytics();
+785:    const interval = setInterval(fetchAnalytics, 10000);
+798:      const respPrj = await fetch("/api/projects", {
+816:      const respTrigger = await fetch(`/api/projects/${addedProject.id}/deployments/trigger`, {
+841:        fetch("/api/projects")
+864:      const resp = await fetch(`/api/projects/${currentProject.id}/deployments/trigger`, {
+882:        fetch("/api/projects")
+903:      const resp = await fetch(`/api/projects/${currentProject.id}/env`, {
+921:      const resp = await fetch(`/api/projects/${currentProject.id}/env/${envId}`, {
+939:      const resp = await fetch(`/api/projects/${currentProject.id}/domains`, {
+956:      const resp = await fetch(`/api/projects/${currentProject.id}/domains/${name}`, {
+979:      const resp = await fetch(`/api/projects/${currentProject.id}/domains`, {
+1001:      const resp = await fetch(`/api/projects/${currentProject.id}/domains/agent-allocate`, {
+1019:        fetch(`/api/projects/${currentProject.id}/deployments`)
+1045:    fetch(`/api/projects/${currentProject.id}/composio/connectors/${connectorId}/toggle`, {
+1065:      const res = await fetch("/api/composio/mcp-connect", {
+1107:    fetch(`/api/projects/${currentProject.id}/api-keys`, {
+1120:        fetchApiKeys(currentProject.id);
+1153:      const resp = await fetch(`/api/projects/${currentProject.id}/shield`, {
+1169:      const resp = await fetch(`/api/projects/${currentProject.id}/shield/waf`, {
+1190:      const resp = await fetch(`/api/projects/${currentProject.id}/shield/waf/${ruleId}`, {
+2690:                          fetch(`/api/projects/${currentProject.id}/database/tables`, {
+2696:                            .then(() => fetchDbTables(currentProject.id));
+2731:                                    fetch(`/api/projects/${currentProject.id}/database/tables/${tbl.name}`, { method: "DELETE" })
+2733:                                      .then(() => fetchDbTables(currentProject.id));
+2771:                                  fetch(`/api/projects/${currentProject.id}/database/tables/${selectedDbTable.name}/record`, {
+2777:                                    .then(() => fetchDbTables(currentProject.id));
+2828:                                              fetch(`/api/projects/${currentProject.id}/database/tables/${selectedDbTable.name}/record/${rowId}`, {
+2832:                                                .then(() => fetchDbTables(currentProject.id));
+2881:                                  fetch(`/api/projects/${currentProject.id}/database/query`, {
+2889:                                      fetchDbTables(currentProject.id); // Reload in case rows inserted!
+2957:                              fetch(`/api/projects/${currentProject?.id}/environments/fork`, {
+2965:                                  fetchEnvironments(currentProject!.id);
+2966:                                  fetchDatabaseServices(currentProject!.id);
+3075:                              fetch(`/api/projects/${currentProject.id}/database/services`, {
+3092:                                    fetchDatabaseServices(currentProject.id);
+3147:                                        fetch(`/api/projects/${currentProject?.id}/database/services/${srv.id}/clone`, {
+3154:                                              fetchDatabaseServices(currentProject!.id);
+3167:                                        fetch(`/api/projects/${currentProject?.id}/database/services/${srv.id}`, {
+3172:                                            fetchDatabaseServices(currentProject!.id);
+3320:                              fetch(`/api/projects/${currentProject.id}/database/services`, {
+3335:                                  fetchDatabaseServices(currentProject.id);
+3459:                              fetch(`/api/projects/${currentProject.id}/scaling`, {
+3467:                                  fetchScalingConfig(currentProject.id);
+3616:                          fetch(`/api/projects/${currentProject.id}/auth/config`, {
+3645:                          fetch(`/api/projects/${currentProject.id}/auth/config`, {
+3669:                              fetch(`/api/projects/${currentProject.id}/auth/config`, {
+3689:                              fetch(`/api/projects/${currentProject.id}/auth/config`, {
+3724:                      fetch(`/api/projects/${currentProject.id}/auth/users`, {
+3732:                          fetchAuthConfig(currentProject.id);
+3782:                            fetch(`/api/projects/${currentProject.id}/auth/users/${usr.id}`, { method: "DELETE" })
+3784:                              .then(() => fetchAuthConfig(currentProject.id));
+3817:                      fetch(`/api/projects/${currentProject.id}/api-keys`, {
+3826:                          fetchApiKeys(currentProject.id);
+3898:                                fetch(`/api/projects/${currentProject.id}/api-keys/${k.id}`, { method: "DELETE" })
+3900:                                  .then(() => fetchApiKeys(currentProject.id));
+3994:                      fetch("/api/workspaces", {
+4000:                        .then(() => fetchWorkspaces());
+4050:                            fetch(`/api/workspaces/${currentWorkspace.id}/members`, {
+4058:                                fetchWorkspaces();
+4104:                                        fetch(`/api/workspaces/${currentWorkspace.id}/members`, {
+4110:                                          .then(() => fetchWorkspaces(currentWorkspace.id))
+4123:                                        fetch(`/api/workspaces/${currentWorkspace.id}/members`, {
+4129:                                          .then(() => fetchWorkspaces(currentWorkspace.id))

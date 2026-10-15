@@ -1,0 +1,48 @@
+# Render Blueprint for Monico Labs
+#
+# HONEST NOTE: Monico's primary targets need no hoster at all —
+#   1. the static web build (dist/) published to IPFS, or
+#   2. the Electron desktop app.
+# This blueprint is a SECONDARY option for the full server backend.
+#
+# FREE-TIER REALITY: Render's free web-service disk is EPHEMERAL — the
+# embedded SQLite database (VORTEX_DATA_DIR) will be wiped on every
+# restart/redeploy unless you attach a paid persistent disk. For free static
+# hosting of the app itself, deploy dist/ as a Render *Static Site* instead
+# (see the commented alternative at the bottom), or use IPFS / a Supabase
+# Storage public bucket.
+#
+# Deploy: https://dashboard.render.com → New → Blueprint → connect jaykk99/Monico-labs
+services:
+  - type: web
+    name: monico-labs
+    runtime: docker
+    plan: free
+    branch: main
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # SQLite lives here; ephemeral on free tier (see note above).
+      - key: VORTEX_DATA_DIR
+        value: /data
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: "true"
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium
+      - key: NODE_VERSION
+        value: "20"
+      # Required for AI browser automation and MCP agent
+      - key: GEMINI_API_KEY
+        sync: false
+      # Agent live-deploy key
+      - key: VORTEX_LIVE_API_KEY
+        sync: false
+      # Optional: Postgres for real database tools
+      - key: VORTEX_DATABASE_URL
+        sync: false
+      # Optional: Vercel API token for real deployments
+      - key: VERCEL_API_TOKEN
+        sync: false
+      # Optional: Composio for platform integrations
+      - key: COMPOSIO_API_KEY
+        sync: false

@@ -1,0 +1,1 @@
+{"compilerOptions":{"allowImportingTsExtensions":false,"esModuleInterop":true,"isolatedModules":false,"jsx":"react-jsx","lib":["ES2022"],"module":"commonjs","moduleDetection":"force","moduleResolution":"node","noEmit":false,"outDir":"dist-electron","rootDir":"electron","skipLibCheck":true,"target":"ES2022","types":["node"]},"extends":"./tsconfig.json","include":["electron/**/*"]}

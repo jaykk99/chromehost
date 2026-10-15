@@ -1,0 +1,1 @@
+{"appId":"ai.monico.labs","extraMetadata":{"main":"dist-electron/main.cjs"},"files":["dist/**/*","dist-electron/**/*","package.json"],"linux":{"target":["AppImage","deb"]},"productName":"Monico Labs"}

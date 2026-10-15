@@ -1,0 +1,6 @@
+node_modules
+dist
+.env
+*.log
+vortex_local_db.json
+.git

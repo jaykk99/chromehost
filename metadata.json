@@ -1,0 +1,6 @@
+{
+  "name": "Vortex Cloud",
+  "description": "An intuitive cloud deployment and MCP orchestration platform. Features autonomous agent control with strict operational protocols, real-time telemetry, and unauthenticated public endpoints for seamless tool integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
