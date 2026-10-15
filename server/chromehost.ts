@@ -549,6 +549,93 @@ export async function runSandboxed(
   }
 }
 
+// ─── .env.example parsing ────────────────────────────────────────────────────
+// When deploying, ChromeHost reads the repo's .env.example (if present) and
+// presents each variable for the user to fill in. No simulation: the parsed
+// keys become real container env vars at deploy time.
+
+export interface EnvVarTemplate {
+  key: string;
+  defaultValue: string;
+  comment: string;
+}
+
+function parseEnvExample(text: string): EnvVarTemplate[] {
+  const vars: EnvVarTemplate[] = [];
+  let pendingComment = "";
+  for (const rawLine of text.split("\n")) {
+    const line = rawLine.trim();
+    if (!line) {
+      pendingComment = "";
+      continue;
+    }
+    if (line.startsWith("#")) {
+      const c = line.replace(/^#+\s?/, "").trim();
+      // Skip section dividers and lines that are clearly headers, not var docs.
+      if (c && !/^─+$/.test(c)) pendingComment = pendingComment ? pendingComment + " " + c : c;
+      continue;
+    }
+    // Strip inline comments that are not inside quotes.
+    let value = line;
+    let comment = pendingComment;
+    const hashIdx = (() => {
+      let inS = false,
+        inD = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === "'" && !inD) inS = !inS;
+        else if (ch === '"' && !inS) inD = !inD;
+        else if (ch === "#" && !inS && !inD) return i;
+      }
+      return -1;
+    })();
+    if (hashIdx >= 0) {
+      const inline = line.slice(hashIdx + 1).trim();
+      if (inline && !comment) comment = inline;
+      value = line.slice(0, hashIdx).trim();
+    }
+    const m = value.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!m) {
+      pendingComment = "";
+      continue;
+    }
+    let def = m[2].trim();
+    if ((def.startsWith('"') && def.endsWith('"')) || (def.startsWith("'") && def.endsWith("'"))) {
+      def = def.slice(1, -1);
+    }
+    // Treat placeholder-y defaults as empty so the user must fill them.
+    if (/^(your[_-]|my[_-]|xxx+|changeme|placeholder|<.*>)$/i.test(def)) def = "";
+    vars.push({ key: m[1], defaultValue: def, comment });
+    pendingComment = "";
+  }
+  return vars;
+}
+
+/** Fetch and parse .env.example from a repo (registry name or git URL). */
+export async function getEnvTemplate(nameOrRepo: string): Promise<{ vars: EnvVarTemplate[]; source: string | null }> {
+  let repo = nameOrRepo;
+  const reg = APP_REGISTRY.find((e) => e.name === sanitizeName(nameOrRepo));
+  if (reg) repo = reg.repo;
+  // Derive raw GitHub URL for .env.example (supports github.com URLs).
+  const m = repo.match(/github\.com[/:]([^/]+\/[^/.]+?)(?:\.git)?$/);
+  if (!m) return { vars: [], source: null };
+  const slug = m[1];
+  for (const branch of ["main", "master"]) {
+    try {
+      const r = await fetch(`https://raw.githubusercontent.com/${slug}/${branch}/.env.example`, {
+        signal: AbortSignal.timeout(15000),
+      });
+      if (r.ok) {
+        const text = await r.text();
+        if (text.trim()) return { vars: parseEnvExample(text), source: `github:${slug}@${branch}` };
+      }
+    } catch {
+      /* try next branch */
+    }
+  }
+  return { vars: [], source: null };
+}
+
 // ─── Router ──────────────────────────────────────────────────────────────────
 
 export function chromeHostRouter(): Router {
@@ -686,6 +773,23 @@ export function chromeHostRouter(): Router {
     const d = getDb();
     const apps = d.prepare("SELECT * FROM chromehost_apps ORDER BY name").all();
     res.json({ apps, registry: APP_REGISTRY, docker: await dockerAvailable() });
+  });
+
+  // Env template for a deploy: reads the repo's .env.example so the UI can
+  // prompt for real values. ?name=<registry-name> or ?repo=<git url>.
+  r.get("/apps/env-template", async (req: Request, res: Response) => {
+    const name = String(req.query.name || "");
+    const repo = String(req.query.repo || "");
+    if (!name && !repo) {
+      res.status(400).json({ error: "name or repo query param is required" });
+      return;
+    }
+    try {
+      const t = await getEnvTemplate(name || repo);
+      res.json(t);
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message || "failed to read .env.example" });
+    }
   });
 
   r.post("/apps/deploy", async (req: Request, res: Response) => {

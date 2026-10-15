@@ -100,6 +100,10 @@ export default function ChromeHostPanel() {
   const [busy, setBusy] = useState<string>("");
   const [composio, setComposio] = useState<{ configured: boolean; source: string; masked: string | null } | null>(null);
   const [composioKey, setComposioKey] = useState("");
+  const [deployTarget, setDeployTarget] = useState<RegistryEntry | null>(null);
+  const [envVars, setEnvVars] = useState<Array<{ key: string; defaultValue: string; comment: string }>>([]);
+  const [envValues, setEnvValues] = useState<Record<string, string>>({});
+  const [envSource, setEnvSource] = useState<string | null>(null);
 
   const authed = key.length > 0;
 
@@ -182,10 +186,40 @@ export default function ChromeHostPanel() {
   };
 
   const deploy = async (entry: RegistryEntry) => {
+    // Step 1: read the repo's .env.example so the user fills real values.
     setBusy(entry.name);
     setError("");
     try {
-      await api(key, "/apps/deploy", { method: "POST", body: JSON.stringify({ name: entry.name }) });
+      const t = await api(key, `/apps/env-template?name=${encodeURIComponent(entry.name)}`);
+      setEnvVars(t.vars || []);
+      setEnvSource(t.source);
+      const initial: Record<string, string> = {};
+      for (const v of t.vars || []) initial[v.key] = v.defaultValue;
+      setEnvValues(initial);
+      setDeployTarget(entry);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const confirmDeploy = async () => {
+    if (!deployTarget) return;
+    setBusy(deployTarget.name);
+    setError("");
+    try {
+      // Only send non-empty values.
+      const env: Record<string, string> = {};
+      for (const [k, v] of Object.entries(envValues)) {
+        if (v.trim()) env[k] = v.trim();
+      }
+      await api(key, "/apps/deploy", {
+        method: "POST",
+        body: JSON.stringify({ name: deployTarget.name, env }),
+      });
+      setDeployTarget(null);
+      setEnvVars([]);
       await refresh();
     } catch (e: any) {
       setError(e.message);
@@ -449,6 +483,66 @@ export default function ChromeHostPanel() {
               );
             })}
           </div>
+
+          {deployTarget && (
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(0,0,0,0.7)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 50,
+                padding: 16,
+              }}
+              onClick={() => setDeployTarget(null)}
+            >
+              <div
+                style={{ ...card, maxWidth: 560, width: "100%", maxHeight: "85vh", overflow: "auto", marginBottom: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 style={{ marginTop: 0 }}>Deploy {deployTarget.name}</h2>
+                {envSource ? (
+                  <>
+                    <p style={{ color: "#9ca3af" }}>
+                      This repo has a <code>.env.example</code> — fill in the values you want the
+                      container to get. Leave blank to skip.
+                    </p>
+                    {envVars.map((v) => (
+                      <div key={v.key} style={{ marginBottom: 10 }}>
+                        <label style={{ fontSize: 13, fontWeight: 600, fontFamily: "monospace" }}>
+                          {v.key}
+                        </label>
+                        {v.comment && (
+                          <div style={{ fontSize: 12, color: "#6b7280", margin: "2px 0 4px" }}>{v.comment}</div>
+                        )}
+                        <input
+                          style={input}
+                          type="password"
+                          placeholder={v.defaultValue ? `default: ${v.defaultValue}` : "leave blank to skip"}
+                          value={envValues[v.key] ?? ""}
+                          onChange={(e) => setEnvValues((s) => ({ ...s, [v.key]: e.target.value }))}
+                        />
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <p style={{ color: "#9ca3af" }}>
+                    No <code>.env.example</code> found in this repo — deploying without extra env vars.
+                  </p>
+                )}
+                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                  <button style={btnGreen} disabled={busy === deployTarget.name} onClick={confirmDeploy}>
+                    {busy === deployTarget.name ? "Deploying…" : "Deploy now"}
+                  </button>
+                  <button style={btnSmall} onClick={() => setDeployTarget(null)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div style={card}>
             <h2 style={{ marginTop: 0 }}>Remote API</h2>
