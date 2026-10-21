@@ -9,8 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger analysis for this repo
+        # Best-effort: the autofix endpoint may be down (e.g. hosting paused);
+        # that must not fail this repo's CI. Log and continue on failure.
         run: |
           curl -sf -X POST https://error-inbox.vercel.app/api/autofix/analyze \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            -d '{"repos":["monico-labs"]}'
+            -d '{"repos":["monico-labs"]}' \
+            || echo "::warning::autofix trigger skipped: endpoint unreachable"
