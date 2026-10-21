@@ -171,6 +171,7 @@ curl -X POST -H "$H" -H "Content-Type: application/json" \
 | POST | /api/chromehost/apps/deploy | Deploy a GitHub repo |
 | POST | /api/chromehost/apps/:name/start | Start an app |
 | POST | /api/chromehost/apps/:name/stop | Stop an app |
+| POST | /api/chromehost/apps/:name/restart | Restart an app |
 | GET | /api/chromehost/apps/:name/logs | View app logs |
 | POST | /api/chromehost/keys | Generate API key |
 | GET | /api/chromehost/keys | List keys (metadata only) |

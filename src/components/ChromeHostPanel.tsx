@@ -240,6 +240,18 @@ export default function ChromeHostPanel() {
     }
   };
 
+  const restartApp = async (app: DeployedApp) => {
+    setBusy(app.name);
+    try {
+      await api(key, `/apps/${app.name}/restart`, { method: "POST" });
+      await refresh();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy("");
+    }
+  };
+
   const showLogs = async (app: DeployedApp) => {
     try {
       const data = await api(key, `/apps/${app.name}/logs?tail=120`);
@@ -427,6 +439,11 @@ export default function ChromeHostPanel() {
                   <button style={btnSmall} disabled={busy === a.name} onClick={() => toggleApp(a)}>
                     {busy === a.name ? "…" : a.status === "running" ? "Stop" : "Start"}
                   </button>
+                  {a.status === "running" && (
+                    <button style={btnSmall} disabled={busy === a.name} onClick={() => restartApp(a)}>
+                      Restart
+                    </button>
+                  )}
                   <button style={btnSmall} onClick={() => showLogs(a)}>
                     Logs
                   </button>

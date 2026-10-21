@@ -10,6 +10,7 @@ import SelfContainedBanner from "./SelfContainedBanner";
  * Hash routing keeps every route working on ANY static host with zero
  * server configuration. `#/chromehost` renders the ChromeHost control
  * panel (API keys, app deploys, remote management).
+ */
 function useHashRoute(): string {
   const [hash, setHash] = useState(() => window.location.hash);
   useEffect(() => {

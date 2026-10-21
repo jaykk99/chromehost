@@ -11,6 +11,7 @@
  *      POST   /api/chromehost/apps/deploy   { repo, name?, runtime?, build?, start?, port?, env? }
  *      POST   /api/chromehost/apps/:name/start
  *      POST   /api/chromehost/apps/:name/stop
+ *      POST   /api/chromehost/apps/:name/restart
  *      GET    /api/chromehost/apps/:name/logs?tail=200
  *      POST   /api/chromehost/keys           { name? }  (bootstrap: open only when zero keys exist)
  *      GET    /api/chromehost/keys
@@ -374,6 +375,11 @@ async function deployApp(opts: {
   if (!(await dockerAvailable())) {
     throw new Error("Docker is not available on this host. Run install.sh to set up Docker.");
   }
+  // Only real git remotes: blocks file:// paths, local dirs, and garbage that
+  // would make `git clone` misbehave or touch the host filesystem.
+  if (!/^(https?:\/\/|git@|ssh:\/\/)[^\s]+$/.test(opts.repo)) {
+    throw new Error('repo must be a git URL (https://…, git@…, or ssh://…).');
+  }
   const name = sanitizeName(opts.name || path.basename(opts.repo, ".git") || "app");
   const d = getDb();
   const existing = d.prepare("SELECT * FROM chromehost_apps WHERE name = ?").get(name) as any;
@@ -445,6 +451,15 @@ async function stopApp(name: string): Promise<void> {
   getDb().prepare("UPDATE chromehost_apps SET status='stopped', updated_at=datetime('now') WHERE name=?").run(n);
 }
 
+async function restartApp(name: string): Promise<void> {
+  const n = sanitizeName(name);
+  if (!(await dockerAvailable())) throw new Error("Docker is not available on this host.");
+  // docker restart is atomic from the caller's view: one call, container
+  // comes back up (or fails loudly) instead of a stop+start race.
+  await execFileAsync("docker", ["restart", `chromehost-${n}`], { timeout: 60000 });
+  getDb().prepare("UPDATE chromehost_apps SET status='running', updated_at=datetime('now') WHERE name=?").run(n);
+}
+
 async function startApp(name: string): Promise<void> {
   const n = sanitizeName(name);
   if (!(await dockerAvailable())) throw new Error("Docker is not available on this host.");
@@ -504,9 +519,13 @@ const EXEC_ALLOWLIST = new Set([
 
 const SECRET_PATTERNS = [
   /sk-[A-Za-z0-9-_]{10,}/g,
-  /xox[bap]-[A-Za-z0-9-]{10,}/g,
+  /sk-or-v1-[A-Za-z0-9-_]{10,}/g,
+  /xox[bpae]-[A-Za-z0-9-]{10,}/g,
   /ghp_[A-Za-z0-9]{10,}/g,
+  /github_pat_[A-Za-z0-9_]{10,}/g,
   /AKIA[0-9A-Z]{16}/g,
+  /AIza[0-9A-Za-z-_]{35}/g,
+  /ya29\.[A-Za-z0-9-_]{10,}/g,
 ];
 
 function redactSecrets(s: string): string {
@@ -798,6 +817,10 @@ export function chromeHostRouter(): Router {
       res.status(400).json({ error: "repo (git URL) is required" });
       return;
     }
+    if (!/^(https?:\/\/|git@|ssh:\/\/)[^\s]+$/.test(repo)) {
+      res.status(400).json({ error: "repo must be a git URL (https://…, git@…, or ssh://…)" });
+      return;
+    }
     // Merge registry defaults when deploying a known app by name.
     let cfg: any = { repo, name, runtime, build, start };
     if (name) {
@@ -827,6 +850,15 @@ export function chromeHostRouter(): Router {
       res.json({ ok: true, status: "stopped" });
     } catch (e: any) {
       res.status(500).json({ error: e?.message || "stop failed" });
+    }
+  });
+
+  r.post("/apps/:name/restart", async (req: Request, res: Response) => {
+    try {
+      await restartApp(req.params.name);
+      res.json({ ok: true, status: "running" });
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message || "restart failed" });
     }
   });
 
