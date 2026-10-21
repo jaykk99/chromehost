@@ -315,7 +315,7 @@ async function dockerAvailable(): Promise<boolean> {
   return dockerChecked;
 }
 
-function sanitizeName(name: string): string {
+export function sanitizeName(name: string): string {
   const n = String(name || "")
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, "-")
@@ -579,7 +579,7 @@ export interface EnvVarTemplate {
   comment: string;
 }
 
-function parseEnvExample(text: string): EnvVarTemplate[] {
+export function parseEnvExample(text: string): EnvVarTemplate[] {
   const vars: EnvVarTemplate[] = [];
   let pendingComment = "";
   for (const rawLine of text.split("\n")) {
@@ -623,7 +623,9 @@ function parseEnvExample(text: string): EnvVarTemplate[] {
       def = def.slice(1, -1);
     }
     // Treat placeholder-y defaults as empty so the user must fill them.
-    if (/^(your[_-]|my[_-]|xxx+|changeme|placeholder|<.*>)$/i.test(def)) def = "";
+    // (Prefix match: "your_key_here" and "my-secret" are placeholders too,
+    // not just a bare "your_" / "changeme".)
+    if (/^(your|my)[_-]|changeme|placeholder|xxx+|^<.*>$/i.test(def)) def = "";
     vars.push({ key: m[1], defaultValue: def, comment });
     pendingComment = "";
   }
